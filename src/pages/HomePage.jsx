@@ -1,9 +1,7 @@
-import { getAllSets } from '../utils/wordset.js';
-import { storage } from '../utils/storage.js';
+import { ALL_SETS } from '../utils/wordset.js';
 
-export default function HomePage({ onStartTest, onGoWrongNote, wrongNoteCount }) {
-  const sets = getAllSets();
-  const progress = storage.getProgress();
+export default function HomePage({ onStartTest, onGoWrongNote, wrongNoteCount, progress = {} }) {
+  const sets = ALL_SETS;
 
   return (
     <div style={{ maxWidth: 720, margin: '0 auto', padding: '2rem 1.5rem' }}>
@@ -18,7 +16,7 @@ export default function HomePage({ onStartTest, onGoWrongNote, wrongNoteCount })
         </p>
       </header>
 
-      {/* Wrong note quick-access */}
+      {/* 오답노트 버튼 */}
       <button
         onClick={onGoWrongNote}
         style={{
@@ -47,18 +45,13 @@ export default function HomePage({ onStartTest, onGoWrongNote, wrongNoteCount })
           </div>
         </div>
         {wrongNoteCount > 0 && (
-          <span style={{
-            background: 'var(--c-accent2)',
-            color: '#fff',
-            borderRadius: '20px',
-            padding: '2px 10px',
-            fontSize: '0.78rem',
-            fontWeight: 600,
-          }}>{wrongNoteCount}</span>
+          <span style={{ background: 'var(--c-accent2)', color: '#fff', borderRadius: '20px', padding: '2px 10px', fontSize: '0.78rem', fontWeight: 600 }}>
+            {wrongNoteCount}
+          </span>
         )}
       </button>
 
-      {/* Section label */}
+      {/* 세트 목록 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
         <span style={{ color: 'var(--c-muted)', fontSize: '0.75rem', fontWeight: 500, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
           단어 세트
@@ -67,7 +60,6 @@ export default function HomePage({ onStartTest, onGoWrongNote, wrongNoteCount })
         <span style={{ color: 'var(--c-muted)', fontSize: '0.75rem' }}>{sets.length} SETS</span>
       </div>
 
-      {/* Set cards grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '0.75rem' }}>
         {sets.map(set => {
           const done = progress[set.setNumber] || 0;
@@ -120,7 +112,6 @@ function SetCard({ set, pct, onStart }) {
       <div style={{ fontSize: '0.8rem', color: 'var(--c-muted)', marginBottom: '0.85rem', fontFamily: 'JetBrains Mono, monospace' }}>
         {set.startId} – {set.endId}
       </div>
-      {/* Progress bar */}
       <div style={{ height: '3px', background: 'var(--c-border)', borderRadius: '99px', overflow: 'hidden' }}>
         <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? 'var(--c-accent)' : 'rgba(124,109,250,0.5)', borderRadius: '99px', transition: 'width 0.4s' }} />
       </div>

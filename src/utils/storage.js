@@ -7,17 +7,38 @@ export const storage = {
   getWrongNote() {
     try {
       return JSON.parse(localStorage.getItem(KEYS.WRONG_NOTE) || '[]');
-    } catch { return []; }
+    } catch {
+      return [];
+    }
   },
+
   saveWrongNote(items) {
-    localStorage.setItem(KEYS.WRONG_NOTE, JSON.stringify(items));
+    try {
+      localStorage.setItem(KEYS.WRONG_NOTE, JSON.stringify(items));
+    } catch (e) {
+      console.warn('오답노트 저장 실패:', e);
+    }
   },
+
   getProgress() {
     try {
       return JSON.parse(localStorage.getItem(KEYS.PROGRESS) || '{}');
-    } catch { return {}; }
+    } catch {
+      return {};
+    }
   },
+
   saveProgress(data) {
-    localStorage.setItem(KEYS.PROGRESS, JSON.stringify(data));
+    try {
+      localStorage.setItem(KEYS.PROGRESS, JSON.stringify(data));
+    } catch (e) {
+      console.warn('진행률 저장 실패:', e);
+    }
+  },
+
+  // 전체 데이터 초기화
+  clear() {
+    localStorage.removeItem(KEYS.WRONG_NOTE);
+    localStorage.removeItem(KEYS.PROGRESS);
   },
 };

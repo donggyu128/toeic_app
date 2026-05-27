@@ -3,7 +3,7 @@ export default function WrongNotePage({ wrongNote, onStartWrongTest, onDelete, o
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto', padding: '2rem 1.5rem' }}>
-      {/* Header */}
+      {/* 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
         <button
           onClick={onGoHome}
@@ -26,7 +26,7 @@ export default function WrongNotePage({ wrongNote, onStartWrongTest, onDelete, o
         </div>
       ) : (
         <>
-          {/* Retry button */}
+          {/* 재시험 버튼 */}
           <button
             onClick={onStartWrongTest}
             style={{
@@ -48,12 +48,12 @@ export default function WrongNotePage({ wrongNote, onStartWrongTest, onDelete, o
             📝 오답 재시험 시작 ({wrongNote.length}단어)
           </button>
 
-          {/* Rules note */}
+          {/* 안내 */}
           <div style={{ fontSize: '0.75rem', color: 'var(--c-muted)', marginBottom: '1rem', padding: '0.6rem 0.85rem', background: 'var(--c-surface)', borderRadius: '8px', border: '1px solid var(--c-border)' }}>
             💡 재시험에서 연속 3회 정답 시 자동 삭제됩니다. 오답 발생 시 카운트 초기화.
           </div>
 
-          {/* Word list */}
+          {/* 단어 목록 */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {sorted.map(item => (
               <WrongNoteCard key={item.word.id} item={item} onDelete={onDelete} />
@@ -67,6 +67,13 @@ export default function WrongNotePage({ wrongNote, onStartWrongTest, onDelete, o
 
 function WrongNoteCard({ item, onDelete }) {
   const { word, wrongCount, consecutiveCorrect } = item;
+
+  const handleDelete = () => {
+    if (window.confirm(`"${word.english}"을 오답노트에서 삭제할까요?`)) {
+      onDelete(word.id);
+    }
+  };
+
   return (
     <div
       className="anim-slide-in"
@@ -80,7 +87,7 @@ function WrongNoteCard({ item, onDelete }) {
         borderRadius: '10px',
       }}
     >
-      {/* Word info */}
+      {/* 단어 정보 */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 500, fontSize: '0.95rem' }}>{word.english}</div>
         <div style={{ color: 'var(--c-muted)', fontSize: '0.8rem', marginTop: '0.15rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -88,18 +95,20 @@ function WrongNoteCard({ item, onDelete }) {
         </div>
       </div>
 
-      {/* Stats */}
+      {/* 통계 + 삭제 */}
       <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexShrink: 0 }}>
         <span style={{ fontSize: '0.72rem', color: '#f87171', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '6px', padding: '2px 7px' }}>
           ✗ {wrongCount}
         </span>
+        {/* 연속 정답 도트 */}
         <div style={{ display: 'flex', gap: '3px' }}>
           {[0, 1, 2].map(i => (
             <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i < consecutiveCorrect ? '#4ade80' : 'var(--c-border)' }} />
           ))}
         </div>
+        {/* 삭제 버튼 (확인창 포함) */}
         <button
-          onClick={() => onDelete(word.id)}
+          onClick={handleDelete}
           title="삭제"
           style={{ background: 'none', border: 'none', color: 'var(--c-muted)', cursor: 'pointer', fontSize: '1rem', padding: '0 0.2rem', lineHeight: 1, transition: 'color 0.15s' }}
           onMouseEnter={e => e.currentTarget.style.color = '#f87171'}

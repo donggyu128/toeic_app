@@ -12,12 +12,12 @@ export default function ResultPage({ state, onGoHome, onGoWrongNote }) {
 
   return (
     <div style={{ maxWidth: 480, margin: '0 auto', padding: '3rem 1.5rem', textAlign: 'center' }}>
-      <div className="anim-fade-up" style={{ animationDelay: '0s' }}>
+      <div className="anim-fade-up">
         <div style={{ fontSize: '0.75rem', color: 'var(--c-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: '1.5rem' }}>
           {isWrongTest ? '오답노트 재시험 결과' : '테스트 결과'}
         </div>
 
-        {/* Grade circle */}
+        {/* 등급 원 */}
         <div style={{
           width: 120, height: 120, borderRadius: '50%',
           border: `3px solid ${grade.color}`,
@@ -30,18 +30,18 @@ export default function ResultPage({ state, onGoHome, onGoWrongNote }) {
           </span>
         </div>
 
-        {/* Stats */}
+        {/* 정답률 */}
         <div className="font-display" style={{ fontSize: '3.5rem', lineHeight: 1, marginBottom: '0.25rem' }}>
           {pct}<span style={{ fontSize: '1.5rem', color: 'var(--c-muted)' }}>%</span>
         </div>
         <div style={{ color: 'var(--c-muted)', fontSize: '0.85rem', marginBottom: '2.5rem' }}>정답률</div>
 
-        {/* Score breakdown */}
+        {/* 맞춤/틀림 통계 */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem', marginBottom: '2.5rem' }}>
           {[
-            { label: '총 문제', value: total, color: 'var(--c-text)' },
-            { label: '맞음',   value: correct, color: '#4ade80' },
-            { label: '틀림',   value: wrong,   color: '#f87171' },
+            { label: '총 문제', value: total,   color: 'var(--c-text)' },
+            { label: '맞음',   value: correct,  color: '#4ade80' },
+            { label: '틀림',   value: wrong,    color: '#f87171' },
           ].map(s => (
             <div key={s.label} style={{ background: 'var(--c-surface)', border: '1px solid var(--c-border)', borderRadius: '12px', padding: '1rem 0.75rem' }}>
               <div className="font-display" style={{ fontSize: '2rem', color: s.color }}>{s.value}</div>
@@ -50,7 +50,7 @@ export default function ResultPage({ state, onGoHome, onGoWrongNote }) {
           ))}
         </div>
 
-        {/* Wrong word list */}
+        {/* 틀린 단어 목록 */}
         {wrong > 0 && (
           <div style={{ textAlign: 'left', marginBottom: '2rem' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--c-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '0.75rem' }}>
@@ -67,14 +67,24 @@ export default function ResultPage({ state, onGoHome, onGoWrongNote }) {
           </div>
         )}
 
-        {/* Actions */}
+        {/* 버튼 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
           {wrong > 0 && (
             <button
               onClick={onGoWrongNote}
               style={{ padding: '0.9rem', background: 'rgba(250,109,109,0.1)', border: '1px solid rgba(250,109,109,0.3)', borderRadius: '12px', color: '#f87171', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }}
             >
-              오답노트 보기
+              {/* 재시험 후 틀렸으면 "돌아가기", 일반 테스트면 "보기" */}
+              {isWrongTest ? '오답노트 돌아가기' : '오답노트 보기'}
+            </button>
+          )}
+          {/* 100% 맞았을 때 다시풀기 버튼 */}
+          {wrong === 0 && (
+            <button
+              onClick={onGoHome}
+              style={{ padding: '0.9rem', background: 'rgba(124,109,250,0.1)', border: '1px solid rgba(124,109,250,0.3)', borderRadius: '12px', color: 'var(--c-accent)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500 }}
+            >
+              🎉 완벽해요! 홈으로
             </button>
           )}
           <button

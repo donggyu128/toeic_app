@@ -11,12 +11,13 @@ export function getAllSets() {
   return Array.from({ length: totalSets }, (_, i) => {
     const setNum = i + 1;
     const words = RAW_WORDS.filter(w => getSetNumber(w.id) === setNum);
-    return { setNumber: setNum, words, startId: words[0].id, endId: words[words.length - 1].id };
+    return {
+      setNumber: setNum,
+      words,
+      startId: words[0].id,
+      endId: words[words.length - 1].id,
+    };
   });
-}
-
-export function getSetWords(setNumber) {
-  return RAW_WORDS.filter(w => getSetNumber(w.id) === setNumber);
 }
 
 // Fisher-Yates shuffle
@@ -29,9 +30,12 @@ export function shuffle(arr) {
   return a;
 }
 
-// Generate 4 choices: 1 correct + 3 random wrong from all words
+// 4지선다 보기 생성: 정답 1 + 랜덤 오답 3
 export function generateChoices(correctWord, allWords) {
   const pool = allWords.filter(w => w.id !== correctWord.id);
   const wrongs = shuffle(pool).slice(0, 3);
   return shuffle([correctWord, ...wrongs]);
 }
+
+// 모듈 로드 시 한 번만 계산 (매 렌더링마다 재계산 방지)
+export const ALL_SETS = getAllSets();
