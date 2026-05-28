@@ -1,60 +1,73 @@
 /**
  * 테스트 진행 상태 — 단일 책임
- *
- * 핵심 설계 결정:
- * - reducer를 export해 순수 함수로 단독 테스트 가능
- * - 정답 판별 로직은 reducer 한 곳에만 존재
- *   hook의 submitAnswer는 action에 correct를 실어 보내고, reducer는 저장만 함
- * - hasStarted 플래그로 RESET 후 isDone=false를 명시적으로 보장
- * - sourceSetNum을 셔플 전 원본 첫 단어 기준으로 고정 (진행률 오기록 방지)
+ * - TOEIC / HSK3 모드 지원
+ * - 객관식(multiple) / 주관식(subjective) 모드 지원
+ * - 오답노트 10개 세트 시험 지원
  */
 import { useReducer, useCallback } from 'react';
-import { shuffleWords, makeChoices, getSetNumber } from '../services/wordService.js';
+import {
+  shuffleWords,
+  makeChoices,
+  makeHSKChoices,
+  getSetNumber,
+  getHSK3SetNumber,
+  isHSKWord,
+} from '../services/wordService.js';
 
 // ─── State 초기값 ─────────────────────────────────────────────
-
 const INIT = {
-  hasStarted:   false,  // RESET 후 isDone=false 보장용 명시적 플래그
+  hasStarted:   false,
   isActive:     false,
   isWrongTest:  false,
-  sourceSetNum: null,   // 셔플 전 원본 첫 단어 기준 세트 번호 — 진행률 정확성 보장
+  questionMode: 'multiple', // 'multiple' | 'subjective'
+  vocabType:    'toeic',    // 'toeic' | 'hsk3'
+  sourceSetNum: null,
   testWords:    [],
   currentIndex: 0,
   choices:      [],
-  answered:     null,   // { selected: Word, correct: boolean } | null
-  answers:      [],     // { word: Word, correct: boolean }[]
+  answered:     null,
+  answers:      [],
 };
 
-// ─── Reducer ──────────────────────────────────────────────────
+// ─── 보기 생성 헬퍼 ────────────────────────────────────────────
+function buildChoices(word, questionMode) {
+  if (questionMode === 'subjective') return []; // 주관식은 보기 불필요
+  return isHSKWord(word) ? makeHSKChoices(word) : makeChoices(word);
+}
 
+// ─── Reducer ──────────────────────────────────────────────────
 export function reducer(state, action) {
   switch (action.type) {
 
     case 'START': {
-      const words      = shuffleWords(action.words);
-      const sourceSetNum = action.words[0] ? getSetNumber(action.words[0].id) : null;
+      const words        = shuffleWords(action.words);
+      const questionMode = action.questionMode ?? 'multiple';
+      const vocabType    = action.vocabType ?? 'toeic';
+      const sourceSetNum = action.words[0]
+        ? (vocabType === 'hsk3' ? getHSK3SetNumber(action.words[0].id) : getSetNumber(action.words[0].id))
+        : null;
       return {
         ...INIT,
         hasStarted:   true,
         isActive:     true,
         isWrongTest:  action.isWrongTest ?? false,
+        questionMode,
+        vocabType,
         sourceSetNum,
         testWords:    words,
-        choices:      makeChoices(words[0]),
+        choices:      buildChoices(words[0], questionMode),
       };
     }
 
     case 'SUBMIT_ANSWER': {
-      // 정답 판별 로직은 여기 한 곳에만 존재
-      // hook에서 correct를 계산해 action에 싣고, reducer는 저장만 담당
       return {
         ...state,
-        answered: { selected: action.selected, correct: action.correct },
+        answered: { selected: action.selected, correct: action.correct, typed: action.typed },
       };
     }
 
     case 'NEXT': {
-      if (!state.answered) return state; // 방어 가드 — 답 없이 NEXT 불가
+      if (!state.answered) return state;
 
       const record     = { word: state.testWords[state.currentIndex], correct: state.answered.correct };
       const newAnswers = [...state.answers, record];
@@ -67,7 +80,7 @@ export function reducer(state, action) {
       return {
         ...state,
         currentIndex: nextIndex,
-        choices:      makeChoices(state.testWords[nextIndex]),
+        choices:      buildChoices(state.testWords[nextIndex], state.questionMode),
         answered:     null,
         answers:      newAnswers,
       };
@@ -82,25 +95,36 @@ export function reducer(state, action) {
 }
 
 // ─── Hook ─────────────────────────────────────────────────────
-
 export function useTestStore() {
   const [state, dispatch] = useReducer(reducer, INIT);
 
-  const startTest = useCallback((words, isWrongTest = false) => {
-    dispatch({ type: 'START', words, isWrongTest });
+  const startTest = useCallback((words, isWrongTest = false, questionMode = 'multiple', vocabType = 'toeic') => {
+    dispatch({ type: 'START', words, isWrongTest, questionMode, vocabType });
   }, []);
 
-  /**
-   * 정답 판별은 hook에서 수행하고 결과를 action에 포함시킴
-   * reducer는 이 값을 그대로 저장 → 판별 로직이 단 한 곳에만 존재
-   * deps: 현재 단어 id(숫자)만 — 배열 참조 변경에 불필요하게 반응하지 않음
-   */
-  const submitAnswer = useCallback((selected) => {
+  const submitAnswer = useCallback((selected, typed = '') => {
     const currentWord = state.testWords[state.currentIndex];
-    const correct     = currentWord ? selected.id === currentWord.id : false;
-    dispatch({ type: 'SUBMIT_ANSWER', selected, correct });
+    if (!currentWord) return false;
+
+    let correct;
+    if (state.questionMode === 'subjective') {
+      // 주관식: HSK는 한국어 뜻 입력, TOEIC은 영어 단어 입력
+      const answer = typed.trim();
+      if (state.vocabType === 'hsk3') {
+        // 중국어 보여주고 한국어 뜻 입력 — 쉼표 앞 첫 뜻도 정답 허용
+        const correctKorean = currentWord.korean.trim();
+        const firstMeaning  = correctKorean.split(/[,，]/)[0].trim();
+        correct = answer === correctKorean || answer === firstMeaning;
+      } else {
+        correct = answer.toLowerCase() === currentWord.english.toLowerCase();
+      }
+    } else {
+      correct = currentWord ? selected.id === currentWord.id : false;
+    }
+
+    dispatch({ type: 'SUBMIT_ANSWER', selected, correct, typed });
     return correct;
-  }, [state.testWords[state.currentIndex]?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [state.testWords[state.currentIndex]?.id, state.questionMode, state.vocabType]); // eslint-disable-line
 
   const nextQuestion = useCallback(() => dispatch({ type: 'NEXT' }), []);
   const resetTest    = useCallback(() => dispatch({ type: 'RESET' }), []);

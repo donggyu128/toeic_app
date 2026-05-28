@@ -6,7 +6,6 @@ const CONSECUTIVE_CORRECT_TO_REMOVE = 3;
 export function useWrongNoteStore() {
   const [wrongNote, setWrongNote] = useState(() => storage.getWrongNote());
 
-  // 함수형 업데이트 패턴 — 항상 최신 prev를 받음
   const update = useCallback((fn) => {
     setWrongNote(prev => {
       const next = fn(prev);
@@ -15,7 +14,7 @@ export function useWrongNoteStore() {
     });
   }, []);
 
-  const addWrong = useCallback((word) => {
+  const addWrong = useCallback((word, vocabType = 'toeic') => {
     update(prev => {
       const idx = prev.findIndex(i => i.word.id === word.id);
       if (idx >= 0) {
@@ -23,7 +22,7 @@ export function useWrongNoteStore() {
           i === idx ? { ...item, wrongCount: item.wrongCount + 1, consecutiveCorrect: 0 } : item,
         );
       }
-      return [...prev, { word, wrongCount: 1, consecutiveCorrect: 0 }];
+      return [...prev, { word, vocabType: vocabType ?? (word.id >= 1001 ? 'hsk3' : 'toeic'), wrongCount: 1, consecutiveCorrect: 0 }];
     });
   }, [update]);
 

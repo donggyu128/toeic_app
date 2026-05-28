@@ -1,12 +1,20 @@
 import { Button } from '../ui.jsx';
 
-export function WrongAnswerFeedback({ answered, currentWord, confirmRef, onNext }) {
+export function WrongAnswerFeedback({ answered, currentWord, confirmRef, onNext, vocabType }) {
   if (!answered || answered.correct) return null;
+
+  const isHSK = vocabType === 'hsk3';
 
   return (
     <div className="anim-fade-up" style={{ marginTop: '1.25rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '0.75rem', fontSize: '0.8rem', color: '#f87171' }}>
-        정답: <strong style={{ color: '#4ade80' }}>{currentWord.korean}</strong>
+        정답:{' '}
+        <strong style={{ color: '#4ade80' }}>{currentWord.korean}</strong>
+        {isHSK && (
+          <span style={{ color: 'var(--c-muted)', marginLeft: '0.5rem', fontSize: '0.75rem' }}>
+            ({currentWord.chinese} · {currentWord.pinyin})
+          </span>
+        )}
         {' '}&mdash; 충분히 확인 후 다음으로 넘어가세요
       </div>
       <Button

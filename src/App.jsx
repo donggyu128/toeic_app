@@ -5,7 +5,6 @@ import TestPage      from './pages/TestPage.jsx';
 import ResultPage    from './pages/ResultPage.jsx';
 import WrongNotePage from './pages/WrongNotePage.jsx';
 
-// 오타 방지 및 자동완성을 위한 view 상수
 const VIEWS = Object.freeze({
   HOME:       'home',
   TEST:       'test',
@@ -19,23 +18,30 @@ export default function App() {
     testState,
     wrongNote,
     progress,
+    hskProgress,
     startTest,
     startWrongTest,
+    startWrongSetTest,
     submitAnswer,
     nextQuestion,
     resetTest,
     deleteWrongItem,
   } = useAppStore();
 
-  const handleStartTest = useCallback((words) => {
-    startTest(words);
+  const handleStartTest = useCallback((words, questionMode, vocabType) => {
+    startTest(words, questionMode, vocabType);
     setView(VIEWS.TEST);
   }, [startTest]);
 
-  const handleStartWrongTest = useCallback(() => {
-    startWrongTest();
+  const handleStartWrongTest = useCallback((questionMode) => {
+    startWrongTest(questionMode);
     setView(VIEWS.TEST);
   }, [startWrongTest]);
+
+  const handleStartWrongSetTest = useCallback((words, questionMode, vocabType) => {
+    startWrongSetTest(words, questionMode, vocabType);
+    setView(VIEWS.TEST);
+  }, [startWrongSetTest]);
 
   const handleGoHome = useCallback(() => {
     resetTest();
@@ -44,8 +50,6 @@ export default function App() {
 
   const handleGoWrongNote = useCallback(() => setView(VIEWS.WRONG_NOTE), []);
 
-  // 테스트 완료 → 결과 화면 전환
-  // view 조건 포함: 다른 화면에서 isDone이 true로 남아있어도 불필요한 전환 방지
   useEffect(() => {
     if (view === VIEWS.TEST && testState.isDone) {
       setView(VIEWS.RESULT);
@@ -60,6 +64,8 @@ export default function App() {
       currentIndex={testState.currentIndex}
       total={testState.testWords.length}
       isWrongTest={testState.isWrongTest}
+      questionMode={testState.questionMode}
+      vocabType={testState.vocabType}
       onSubmit={submitAnswer}
       onNext={nextQuestion}
       onGoHome={handleGoHome}
@@ -79,6 +85,7 @@ export default function App() {
     <WrongNotePage
       wrongNote={wrongNote}
       onStartWrongTest={handleStartWrongTest}
+      onStartWrongSetTest={handleStartWrongSetTest}
       onDelete={deleteWrongItem}
       onGoHome={handleGoHome}
     />
@@ -87,6 +94,7 @@ export default function App() {
   return (
     <HomePage
       progress={progress}
+      hskProgress={hskProgress}
       wrongNoteCount={wrongNote.length}
       onStartTest={handleStartTest}
       onGoWrongNote={handleGoWrongNote}

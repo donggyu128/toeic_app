@@ -7,15 +7,15 @@ function resolveChoiceAppearance(choice, correctWord, answered) {
     return { bg: 'var(--c-surface)', border: 'var(--c-border)', color: 'var(--c-text)', animClass: '' };
   }
 
-  const isCorrectAnswer  = choice.id === correctWord.id;
-  const isSelectedWrong  = answered.selected.id === choice.id && !answered.correct;
+  const isCorrectAnswer = choice.id === correctWord.id;
+  const isSelectedWrong = answered.selected?.id === choice.id && !answered.correct;
 
   if (isCorrectAnswer) {
     return {
       bg:        'rgba(34,197,94,0.12)',
       border:    '#22c55e',
       color:     '#4ade80',
-      animClass: answered.correct && answered.selected.id === choice.id ? 'anim-correct' : '',
+      animClass: answered.correct && answered.selected?.id === choice.id ? 'anim-correct' : '',
     };
   }
   if (isSelectedWrong) {
@@ -24,7 +24,9 @@ function resolveChoiceAppearance(choice, correctWord, answered) {
   return { bg: 'var(--c-surface)', border: 'var(--c-border)', color: 'var(--c-muted)', animClass: '' };
 }
 
-export function ChoiceList({ choices, currentWord, answered, onSubmit }) {
+export function ChoiceList({ choices, currentWord, answered, onSubmit, vocabType }) {
+  const isHSK = vocabType === 'hsk3';
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', flex: 1 }}>
       {choices.map((choice, index) => {
@@ -46,7 +48,16 @@ export function ChoiceList({ choices, currentWord, answered, onSubmit }) {
             <span className="font-mono" style={{ fontSize: '0.75rem', color: 'var(--c-muted)', minWidth: '1.2rem' }}>
               {LABELS[index] ?? '?'}
             </span>
-            {choice.korean}
+            {isHSK ? (
+              <span>
+                {choice.chinese}
+                <span style={{ fontSize: '0.75rem', color: 'var(--c-muted)', marginLeft: '0.5rem' }}>
+                  {choice.pinyin}
+                </span>
+              </span>
+            ) : (
+              choice.korean
+            )}
           </Button>
         );
       })}

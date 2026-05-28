@@ -8,3 +8,9 @@ export function generateChoices(correctWord, wordPool) {
   const distractors = shuffle(wordPool.filter(w => w.id !== correctWord.id)).slice(0, 3);
   return shuffle([correctWord, ...distractors]);
 }
+
+// HSK3용 보기 생성 (chinese 필드 사용)
+export function generateHSKChoices(correctWord, wordPool) {
+  const distractors = shuffle(wordPool.filter(w => w.id !== correctWord.id)).slice(0, 3);
+  return shuffle([correctWord, ...distractors]);
+}
