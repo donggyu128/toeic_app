@@ -72,3 +72,16 @@ body::before {
 .anim-slide-in { animation: slideIn 0.3s ease both; }
 .anim-correct  { animation: correctPop 0.4s ease both; }
 .anim-wrong    { animation: wrongShake 0.4s ease both; }
+
+/* Shared interactive primitives */
+.ui-interactive {
+  transition: border-color 0.15s ease, transform 0.15s ease, background-color 0.15s ease;
+}
+
+.ui-interactive:hover {
+  border-color: var(--c-accent) !important;
+}
+
+.ui-lift:hover {
+  transform: translateY(-2px);
+}
